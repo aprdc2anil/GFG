@@ -6,7 +6,7 @@ namespace GFGCodes
     {
         static void Main(string[] args)
         {
-            IsBST.EntryPoint();
+            BTTreeDiameter.EntryPoint();
         }
     }
 }

@@ -13,11 +13,11 @@ namespace GFGCodes.DataStructure.Helpers
     }
     public static class BinaryTreeHelpers<T>
     {
-        public static BinaryTreeNode<T> Generate(T[] array)
+        public static IBinaryTreeNode<T> Generate(T[] array)
         {
-            BinaryTreeNode<T> root, temp;
+            IBinaryTreeNode<T> root, temp;
             temp = root = new BinaryTreeNode<T>(array[0]);
-            Queue<BinaryTreeNode<T>> tempStack = new Queue<BinaryTreeNode<T>>();
+            Queue<IBinaryTreeNode<T>> tempStack = new Queue<IBinaryTreeNode<T>>();
 
             Random r = new Random();
 
@@ -58,12 +58,12 @@ namespace GFGCodes.DataStructure.Helpers
             
         }
 
-        public static void Print(BinaryTreeNode<T> root)
+        public static void Print(IBinaryTreeNode<T> root)
         {
             PrintPretty(root, "", NodePosition.center, true, false);
         }
 
-        private static void PrintPretty(BinaryTreeNode<T> root, string indent, NodePosition nodePosition, bool last, bool empty)
+        private static void PrintPretty(IBinaryTreeNode<T> root, string indent, NodePosition nodePosition, bool last, bool empty)
         {
 
             Console.Write(indent);
