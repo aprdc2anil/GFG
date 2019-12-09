@@ -170,7 +170,7 @@ namespace GFGCodes.DataStructure
                         head = preOrderStack.Pop();
 
                         //// IMPORTANT LOGIC
-                        while (index > 0 && path[index - 1] != null && (path[index - 1].Left != head && path[index - 1].Right != head))
+                        while (index > 0 && path[index] != head)
                         {
                             currSum += path[index].Data;
                             path[index] = null;
