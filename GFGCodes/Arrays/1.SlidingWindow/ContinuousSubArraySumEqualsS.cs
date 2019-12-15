@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GFGCodes
 {
-    class ContinuousSubArraySum
+    class ContinuousSubArraySumEqualsS
     {
         public static void EntryPoint()
         {
