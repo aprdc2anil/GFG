@@ -9,7 +9,7 @@ namespace GFGCodes
     {
         static void Main(string[] args)
         {
-            MaxContinuousSubArraySumOfSizeAtmostK.EntryPoint();
+            TopologicalSort.EntryPoint();
             Console.ReadLine();
             ////var matrix = ReadMatrixMXN(3, 4);
             ////MatrixPrint(matrix);
