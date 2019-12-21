@@ -6,4 +6,10 @@
     <LangVersion>7.1</LangVersion>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Folder Include="Arrays\BinarySearch\" />
+    <Folder Include="Arrays\Stacks\" />
+    <Folder Include="Arrays\Queues\" />
+  </ItemGroup>
+
 </Project>
