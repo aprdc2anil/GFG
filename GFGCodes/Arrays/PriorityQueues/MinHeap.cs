@@ -10,6 +10,12 @@ namespace GFGCodes
 
         private int size;
 
+        public MinHeap():this(5)
+        {
+            
+        }
+            
+
         public MinHeap(int size)
         {
             this.size = size;
@@ -36,7 +42,8 @@ namespace GFGCodes
 
             internalArray[this.Count++] = item;
 
-            HeapifyIndexUp(LastChildIndex);
+            if(this.Count>1)
+                HeapifyIndexUp(LastChildIndex);
         }
 
         public int RemoveMin()
@@ -54,11 +61,21 @@ namespace GFGCodes
 
             int min = internalArray[0];
             internalArray[0] = internalArray[LastChildIndex];
+
+            // this is for non zero elements just to make sure for debugging not confused
+            internalArray[LastChildIndex] = 0;
             --Count;
 
             HeapifyIndexDown(0);
 
             return min;
+        }
+
+        public int[] ToArray()
+        {
+            int[] array = new int[this.Count];
+            Array.Copy(internalArray, array, this.Count);
+            return array;
         }
 
         private void HeapifyIndexDown(int index)
@@ -67,33 +84,31 @@ namespace GFGCodes
 
             while (curr <= LastParentIndex)
             {
-                if (internalArray[curr] > internalArray[LeftChildIndex(curr)])
+                int leftIndex = LeftChildIndex(curr);
+                int rightIndex = -1;
+                int swapIndex = curr;
+
+                try
                 {
-                    this.Swap(internalArray, curr, LeftChildIndex(curr));
-                    curr = LeftChildIndex(curr);
+                    rightIndex = RightChildIndex(curr);
                 }
-                else
+                catch (Exception ex)
                 {
-                    if (curr < LastParentIndex)
+                }
+
+                if (internalArray[leftIndex] < internalArray[curr])
+                {
+                    swapIndex = leftIndex;
+                }
+                if (rightIndex != -1)
+                {
+                    if (internalArray[rightIndex] < internalArray[swapIndex])
                     {
-                        if (internalArray[curr] > internalArray[RightChildIndex(curr)])
-                        {
-                            this.Swap(internalArray, curr, RightChildIndex(curr));
-                            curr = RightChildIndex(curr);
-                        }
+                        swapIndex = rightIndex;
                     }
-                    else
-                    {
-                        if (this.Count == ((LastParentIndex + 1) * 2 + 1))
-                        {
-                            if (internalArray[curr] > internalArray[LastChildIndex])
-                            {
-                                this.Swap(internalArray, curr, LastChildIndex);
-                                break;
-                            }
-                        }
-                    }                    
                 }
+                this.Swap(internalArray, curr, swapIndex);
+                curr = swapIndex;
             }
         }
 
