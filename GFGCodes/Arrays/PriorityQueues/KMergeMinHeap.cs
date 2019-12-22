@@ -4,36 +4,66 @@ using System.Text;
 
 namespace GFGCodes
 {
-    public class MinHeap
+    public class KMergeMinHeap<T>
     {
-        private int[] internalArray;
+        private MinHeapKMergeType<T>[] internalArray;
 
         private int size;
 
-        public MinHeap():this(5)
+        private IComparer<T> comparer;
+
+        public KMergeMinHeap():this(5, default)
         {
             
         }
-            
 
-        public MinHeap(int size)
+        public KMergeMinHeap(int size) : this(size, default)
+        {
+
+        }
+        
+        public KMergeMinHeap(int size, IComparer<T> comparer)
         {
             this.size = size;
             this.Count = 0;
-            internalArray = new int[size];
+            internalArray = new MinHeapKMergeType<T>[size];
+
+            if (comparer != null)
+            {
+                this.comparer = comparer;
+            }
+            else
+            {
+                this.comparer = Comparer<T>.Default;
+            }
         }
 
-        public MinHeap(int[] inputArray)
+        public KMergeMinHeap(T[] inputArray): this(inputArray, default)
+        {
+           
+        }
+
+        public KMergeMinHeap(T[] inputArray, IComparer<T> comparer)
         {
             this.size = this.Count = inputArray.Length;
-            internalArray = new int[this.size];
+            internalArray = new MinHeapKMergeType<T>[this.size];
             Array.Copy(inputArray, internalArray, this.size);
+
+            if (comparer != null)
+            {
+                this.comparer = comparer;
+            }
+            else
+            {
+                this.comparer = Comparer<T>.Default;
+            }
+
             this.HeapifyArray();
         }
 
         public int Count { get; private set; }
 
-        public void Add(int item)
+        public void Add(MinHeapKMergeType<T> item)
         {
             if (this.Count == this.size)
             {
@@ -46,84 +76,47 @@ namespace GFGCodes
                 HeapifyIndexUp(LastChildIndex);
         }
 
-        public int RemoveMin()
+        public MinHeapKMergeType<T> RemoveMin()
         {
             if (this.Count == 0)
             {
                 throw new IndexOutOfRangeException();
             }
 
-            int min = internalArray[0];
+            MinHeapKMergeType<T> min = internalArray[0];
+
             if (this.Count == 1)
             {
                 --this.Count;
                 return min;                
             }
+
             
             internalArray[0] = internalArray[LastChildIndex];
 
             // this is for non zero elements just to make sure for debugging not confused
-            internalArray[LastChildIndex] = 0;
+            internalArray[LastChildIndex] = default;
             --Count;
 
             if (this.Count > 1)
-            {
                 HeapifyIndexDown(0);
-            }
 
             return min;
         }
 
-        public int[] ToArray()
+        public T[] ToArray()
         {
-            int[] array = new int[this.Count];
-            Array.Copy(internalArray, array, this.Count);
+            T[] array = new T[this.Count];
+
+            for (int i = 0; i < this.Count; ++i)
+            {
+                array[i] = internalArray[i].Data;
+            }
+
             return array;
         }
-
-        private void HeapifyIndexDown(int index)
-        {
-            int curr = index;
-
-            while (curr <= LastParentIndex)
-            {
-                int leftIndex = LeftChildIndex(curr);
-                int rightIndex = -1;
-                int swapIndex = curr;
-
-                try
-                {
-                    rightIndex = RightChildIndex(curr);
-                }
-                catch (Exception ex)
-                {
-                }
-
-                if (internalArray[leftIndex] < internalArray[curr])
-                {
-                    swapIndex = leftIndex;
-                }
-                if (rightIndex != -1)
-                {
-                    if (internalArray[rightIndex] < internalArray[swapIndex])
-                    {
-                        swapIndex = rightIndex;
-                    }
-                }
-
-                if (curr != swapIndex)
-                {
-                    this.Swap(internalArray, curr, swapIndex);
-                    curr = swapIndex;
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-
-        public int GetMin()
+        
+        public MinHeapKMergeType<T> GetMin()
         {
             if (this.Count > 0)
                 return internalArray[0];
@@ -160,10 +153,53 @@ namespace GFGCodes
             {
                 parentIndex = ParentIndex(curr);
 
-                if (internalArray[curr]< internalArray[parentIndex])
+                if (this.comparer.Compare(internalArray[curr].Data, internalArray[parentIndex].Data) < 0)
                 {
                     this.Swap(internalArray, curr, parentIndex);
                     curr = ParentIndex(curr);
+                }
+                else
+                {
+                    break;
+                }                
+            }
+        }
+        
+        private void HeapifyIndexDown(int index)
+        {
+            int curr = index;
+
+            while (curr <= LastParentIndex)
+            {
+                int leftIndex = LeftChildIndex(curr);
+                int rightIndex = -1;
+                int swapIndex = curr;
+
+                try
+                {
+                    rightIndex = RightChildIndex(curr);
+                }
+                catch (Exception ex)
+                {
+                }
+
+
+                if (this.comparer.Compare(internalArray[leftIndex].Data, internalArray[curr].Data) < 0)
+                {
+                    swapIndex = leftIndex;
+                }
+                if (rightIndex != -1)
+                {
+                    if (this.comparer.Compare(internalArray[rightIndex].Data, internalArray[swapIndex].Data) < 0)
+                    {
+                        swapIndex = rightIndex;
+                    }
+                }
+
+                if (curr != swapIndex)
+                {
+                    this.Swap(internalArray, curr, swapIndex);
+                    curr = swapIndex;
                 }
                 else
                 {
@@ -202,9 +238,9 @@ namespace GFGCodes
             return parentIndex * 2 + 2;
         }
 
-        private void Swap(int[] array, int aIndex, int bIndex)
+        private void Swap(MinHeapKMergeType<T>[] array, int aIndex, int bIndex)
         {
-            int temp = array[aIndex];
+            MinHeapKMergeType<T> temp = array[aIndex];
             array[aIndex] = array[bIndex];
             array[bIndex] = temp;
         }
