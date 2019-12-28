@@ -7,9 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Arrays\BinarySearch\" />
-    <Folder Include="Arrays\Stacks\" />
-    <Folder Include="Arrays\Queues\" />
+    <Folder Include="Arrays\5.FindMissingNumbers\" />
+    <Folder Include="Arrays\4.MergeIntervals\" />
+    <Folder Include="Arrays\Heaps\12.TopKElements\" />
+    <Folder Include="Arrays\Heaps\9.TwoHeaps\" />
+    <Folder Include="Arrays\10.Subsets\" />
+    <Folder Include="Arrays\16.Subsequences\" />
+    <Folder Include="Arrays\18.StackBasedArrayProblems\" />
+    <Folder Include="Arrays\19.QueueBasedArrayProblems\" />
+    <Folder Include="DataStructure\LinkedLists\3.FastAndSlowPointers\" />
+    <Folder Include="DataStructure\LinkedLists\6.InPlaceReversal\" />
+    <Folder Include="DataStructure\17.NewDatastructures\" />
   </ItemGroup>
 
 </Project>

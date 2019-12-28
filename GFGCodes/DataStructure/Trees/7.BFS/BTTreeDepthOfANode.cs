@@ -72,7 +72,7 @@ namespace GFGCodes.DataStructure
 
             //bool isFound = false;
 
-            int depth = DepthOfANodeRecursive(root, 123);
+            int depth = DepthOfANodeNonRecursive(root, 123);
             Console.WriteLine("Depth is : {0}", depth);
             
             Console.ReadLine();
@@ -150,7 +150,7 @@ namespace GFGCodes.DataStructure
 
         }
                
-        public static int DepthOfANodeRecursive(BinaryTreeNode<int> head, BinaryTreeNode<int> depthNode)
+        public static int DepthOfANodeNonRecursive(BinaryTreeNode<int> head, BinaryTreeNode<int> depthNode)
         {
             if (head == null)
                 return -1;
@@ -192,7 +192,7 @@ namespace GFGCodes.DataStructure
             return depth;
         }
         
-        public static int DepthOfANodeRecursive(BinaryTreeNode<int> head, int element)
+        public static int DepthOfANodeNonRecursive(BinaryTreeNode<int> head, int element)
         {
             if (head == null)
                 return -1;
