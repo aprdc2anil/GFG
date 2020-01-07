@@ -40,6 +40,7 @@ For simplicity represent the from to interval as follows
 
 with this interval we can look into the BSTIntervalTree to find a non overlapping position available or not
 
+Even for a minute the same approach will work..in the same way
 
 this would reduce the overall time complexity to O(logM) , where m is the total no of existed meeting in the day
 
