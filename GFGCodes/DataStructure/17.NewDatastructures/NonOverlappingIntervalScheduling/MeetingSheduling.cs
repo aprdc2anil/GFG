@@ -104,7 +104,7 @@ namespace GFGCodes
         {
             if (root == null)
             {
-                root = new BinarySearchIntervalTreeNode(interval);
+                
                 return true;
             }
             return PrivateCheckAvailability(root, interval);
