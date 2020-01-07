@@ -18,7 +18,6 @@
     <Folder Include="DataStructure\Graph\" />
     <Folder Include="DataStructure\3.FastAndSlowPointers\" />
     <Folder Include="DataStructure\6.InPlaceReversal\" />
-    <Folder Include="DataStructure\17.NewDatastructures\" />
   </ItemGroup>
 
 </Project>
