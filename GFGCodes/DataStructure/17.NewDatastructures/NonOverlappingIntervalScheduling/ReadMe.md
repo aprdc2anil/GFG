@@ -72,12 +72,12 @@ flow for check availability
    
 for each size
 
-  get list of meeting rooms (day,size hash) O(1)
+  - get list of meeting rooms (day,size hash) O(1)
   
-  Parllel.ForEach(meetingroom in meetingrooms)
+  - Parllel.ForEach(meetingroom in meetingrooms)
   
        CheckAvailability with in the perticular meetingroom and day time line
        
        if found return here with the meeting room(s) of the minimum matched size
        
-  if no meeting room can be found look for the next size
+  - if no meeting room can be found look for the next size
