@@ -19,15 +19,14 @@ namespace MeetingRoomScheduling
         private MeetingShedulingManager()
         {
         }
-
+        
         public static MeetingShedulingManager Instance { get { return lazy.Value; } }
 
         private static double providedCapacity;
         private static double bookedCapacity;
-
-        // to do , need to dispose this 
-        private static readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
+        
         private static readonly object lockObject = new object();
+        private static readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
 
         private static readonly Dictionary<string, MeetingRoom> meetingRooms= new Dictionary<string, MeetingRoom>();
         private static readonly Dictionary<string, int> meetingRoomCapacity = new Dictionary<string, int>();
@@ -75,6 +74,7 @@ namespace MeetingRoomScheduling
         public async Task<List<string>> GetAvailableMeetingRooms(DateTime from, DateTime to, int requestedSize)
         {
             var newMeetingRequest = ValidateAndGetMeeting(from, to, requestedSize);
+            List<string> availableMeetingRooms = new List<string>();
 
             if (newMeetingRequest != null)
             {
@@ -85,9 +85,7 @@ namespace MeetingRoomScheduling
                 while (availableSizesList[count] < newMeetingRequest.MeetingSizeRequested)
                 {
                     ++count;
-                }
-
-                List<string> availableMeetingRooms = new List<string>();
+                }                
 
                 foreach (var size in availableSizesList.Skip(count))
                 {
@@ -98,7 +96,6 @@ namespace MeetingRoomScheduling
 
                     await Task.WhenAll(tasks).ConfigureAwait(false);
 
-
                     availableMeetingRooms = tasks.Select(p => p.Result).Where(p => p != null).ToList<string>();
 
                     if (availableMeetingRooms.Any())
@@ -106,12 +103,9 @@ namespace MeetingRoomScheduling
                         break;
                     }
                 }
-
-                return availableMeetingRooms;
             }
-
-
-            return new List<string>();
+            
+            return availableMeetingRooms;
         }
 
         /// <summary>
@@ -125,6 +119,7 @@ namespace MeetingRoomScheduling
         /// <returns></returns>
         public bool BookMeeting(DateTime from, DateTime to, int requestedSize, string meetingRoomId, string requestorId)
         {
+
             if (!meetingRooms.ContainsKey(meetingRoomId))
             {
                 return false;
@@ -156,6 +151,11 @@ namespace MeetingRoomScheduling
 
         #region private methods
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="requestedSize"></param>
+        /// <param name="requestorId"></param>
         private void UpdateResourceEfficiencyTrackers(int requestedSize, string requestorId)
         {
             try
@@ -173,6 +173,12 @@ namespace MeetingRoomScheduling
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="newMeetingRequest"></param>
+        /// <param name="meetingRoom"></param>
+        /// <returns></returns>
         private async Task<string> PrivateCheckMeetingRoomAvailability(Meeting newMeetingRequest, string meetingRoom)
         {
             var result = await meetingRooms[meetingRoom].CheckAvailability(newMeetingRequest);
@@ -185,6 +191,14 @@ namespace MeetingRoomScheduling
             return null;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="requestedSize"></param>
+        /// <param name="requestorId"></param>
+        /// <returns></returns>
         private Meeting ValidateAndGetMeeting(DateTime from, DateTime to, int requestedSize, string requestorId = null)
         {
             var roundedFrom = RoundUpDateTime(from);
@@ -240,6 +254,12 @@ namespace MeetingRoomScheduling
             return new DateTime(dateToRound.Ticks - delta, DateTimeKind.Utc);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="roundedFrom"></param>
+        /// <param name="roundedTo"></param>
+        /// <returns></returns>
         private static Interval GetInterval(DateTime roundedFrom, DateTime roundedTo)
         {
             int low = (roundedFrom.Hour * 60 + roundedFrom.Minute) / 5;
@@ -248,6 +268,11 @@ namespace MeetingRoomScheduling
             return new Interval(low, high);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="roundedFrom"></param>
+        /// <returns></returns>
         private static string GetDay(DateTime roundedFrom)
         {
             return roundedFrom.ToShortDateString();
@@ -256,21 +281,21 @@ namespace MeetingRoomScheduling
 
         #region admin methods
         /// <summary>
-        /// to do: assuming the id is unique while adding, this needs to be validated seperately
+        /// 
         /// </summary>
         /// <param name="roomSize"></param>
         /// <param name="id"></param>
         /// <returns></returns>
         public bool AddMeetingRoom(int roomSize, string id)
         {
-            if (!ValidateMeetingRoom(roomSize, id))
+            if (meetingRooms.ContainsKey(id))
             {
                 return false;
             }
 
             MeetingRoom newRoom = new MeetingRoom(id, roomSize);
 
-            // to do , this lock is inefficient can be changed later
+            // this is a rare operation lock should be fine here.
             lock (lockObject)
             {
                 if (meetingRooms.TryAdd(newRoom.MeetingRoomId, newRoom))
@@ -292,22 +317,6 @@ namespace MeetingRoomScheduling
                         }
                     }
                 }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// add any specific validations here
-        /// </summary>
-        /// <param name="meetingSize"></param>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        private bool ValidateMeetingRoom(int meetingSize, string id)
-        {
-            if (meetingRooms.ContainsKey(id))
-            {
-                return false;
             }
 
             return true;
