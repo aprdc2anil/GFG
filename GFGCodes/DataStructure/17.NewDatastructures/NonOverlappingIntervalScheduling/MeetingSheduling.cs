@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace GFGCodes
 {
@@ -254,8 +255,10 @@ namespace GFGCodes
         /// </summary>
         /// <param name="meeting"></param>
         /// <returns></returns>
-        public bool CheckAvailability(Meeting meeting)
+        public Task<bool> CheckAvailability(Meeting meeting)
         {
+            var flag = false;
+
             ////var day = GetDay(roundedFrom);
 
             ////if (!dailyScheduledMeetings.ContainsKey(day))
@@ -263,7 +266,7 @@ namespace GFGCodes
             ////    return true;
             ////}           
 
-            return false;
+            return Task.FromResult<bool>(flag);
         }
         
         /// <summary>
@@ -344,19 +347,58 @@ namespace GFGCodes
         /// <param name="to"></param>
         /// <param name="requestedSize"></param>
         /// <returns></returns>
-        public List<string> GetAvailableMeetingRooms(DateTime from, DateTime to, int requestedSize)
+        public async Task<List<string>> GetAvailableMeetingRooms(DateTime from, DateTime to, int requestedSize)
         {
             var newMeetingRequest = ValidateAndGetMeeting(from, to, requestedSize);
 
             if (newMeetingRequest != null)
             {
-                // logic to check 
+                // to do: this is generally in small number this should be ok, and is already in sorted order
+                var availableSizesList = availableSizes.ToList();
+                int count = 0;
 
-                return new List<string>();
+                while (availableSizesList[count] < newMeetingRequest.MeetingSizeRequested)
+                {
+                    ++count;
+                }
+
+                List<string> availableMeetingRooms = new List<string>();
+
+                foreach (var size in availableSizesList.Skip(count))
+                {
+                    var meetingRoomIds = meetingRoomsBySize[size];
+
+                    // run in parllel for the same size meeting rooms
+                    var tasks = meetingRoomIds.Select(p => PrivateCheckMeetingRoomAvailability(newMeetingRequest, p));
+
+                    await Task.WhenAll(tasks).ConfigureAwait(false);
+
+
+                    availableMeetingRooms = tasks.Select(p => p.Result).Where(p => p != null).ToList<string>();
+
+                    if (availableMeetingRooms.Any())
+                    {
+                        break;
+                    }
+                }
+
+                return availableMeetingRooms;
             }
 
 
             return new List<string>();
+        }
+
+        private async Task<string> PrivateCheckMeetingRoomAvailability(Meeting newMeetingRequest, string meetingRoom)
+        {
+            var result = await meetingRooms[meetingRoom].CheckAvailability(newMeetingRequest);
+
+            if (result)
+            {
+                return meetingRoom;
+            }
+
+            return null;
         }
 
         private Meeting ValidateAndGetMeeting(DateTime from, DateTime to, int requestedSize, string requestorId=null)
