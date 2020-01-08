@@ -20,26 +20,36 @@ Solution
 Datastructure , InMemory
      
 double providedCapacity; // requestedCapacity Honoured so far
+
 double bookedCapacity; // Actual Booked Capacity So far
 
 SortedSet<int> availableSizes; // unique meeting room sizes avaialble
+     
 SortedDictionary<int, SortedSet<string>> meetingRoomsBySize; // meetingroom ids by size
+     
 Dictionary<string, int> meetingRoomCapacity; // meetingroom capacity by meetingroomid
     
 Dictionary<string, MeetingRoom> meetingRooms; meetingrooms by meeting id
 
 MeetingRoom
+
    - Dictionary<string, MeetingRoomTimeLine> dailyScheduledMeetings; // meeting lime lines for this meeting room by each day
+   
      - MeetingRoomTimeLine
+     
          - BST (should be oprimized for log n)
                 - Meeting scheduled Interval
 
 https://github.com/aprdc2anil/GFG/blob/master/MeetingRoomScheduling/MeetingShedulingManager.cs   
 
 Methods Supported
+
     - double GetResourceEfficiency
+    
     - List<string> GetAvailableMeetingRooms(DateTime from, DateTime to, int requestedSize)
+    
     - bool BookMeeting(DateTime from, DateTime to, int requestedSize, string meetingRoomId, string requestorId)
+    
     - bool AddMeetingRoom(int roomSize, string id)
   
 
