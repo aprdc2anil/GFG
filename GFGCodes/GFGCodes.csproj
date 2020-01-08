@@ -20,4 +20,8 @@
     <Folder Include="DataStructure\6.InPlaceReversal\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MeetingRoomScheduling\MeetingRoomScheduling.csproj" />
+  </ItemGroup>
+
 </Project>
