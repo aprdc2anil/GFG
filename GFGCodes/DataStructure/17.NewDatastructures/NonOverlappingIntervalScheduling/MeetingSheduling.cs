@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 
 namespace GFGCodes
 {
@@ -58,17 +59,30 @@ namespace GFGCodes
 
     /// <summary>
     /// to do: this is currently bst, need to make it balancing bst later
+    /// NOTE: This is an individual timeline of a specifcific meeting room and for specific day     
     /// </summary>
     public class MeetingRoomTimeLine
     {
         private MeetingTreeNode root;
+        private readonly object lockObject = new object();       
 
         // to do
         public bool Add(Meeting interval)
         {
             if (root == null)
             {
-                root = new MeetingTreeNode(interval);
+                lock (lockObject)
+                {
+                    if (root == null)
+                    {
+                        root = new MeetingTreeNode(interval);
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
                 return true;
             }
             else
@@ -84,20 +98,41 @@ namespace GFGCodes
             {
                 if (root.LeftMeeting == null)
                 {
-                    root.LeftMeeting = new MeetingTreeNode(interval);
-                    return true;
+                    var boolFlag = false;
+
+                    lock (lockObject)
+                    {
+                        if (root.LeftMeeting == null)
+                        {
+                            root.LeftMeeting = new MeetingTreeNode(interval);
+                            boolFlag = true;
+                        }
+                    }
+
+                    return boolFlag;
+
                 }
                 else
                 {
-                   return PrivateAdd(root.LeftMeeting, interval);
+                    return PrivateAdd(root.LeftMeeting, interval);
                 }
             }
             else if (interval.MeetingInterval.Low >= root.Meeting.MeetingInterval.High)
             {
                 if (root.RightMeeting == null)
                 {
-                    root.RightMeeting = new MeetingTreeNode(interval);
-                    return true;
+                    var boolFlag = false;
+
+                    lock (lockObject)
+                    {
+                        if (root.RightMeeting == null)
+                        {
+                            root.RightMeeting = new MeetingTreeNode(interval);
+                            boolFlag = true;
+                        }
+                    }
+
+                    return boolFlag;
                 }
                 else
                 {
