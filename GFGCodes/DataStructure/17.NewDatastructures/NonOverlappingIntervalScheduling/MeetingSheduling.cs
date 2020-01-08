@@ -9,8 +9,8 @@ namespace GFGCodes
     /// </summary>
     public class Interval
     {
-        public int Low { get; set; }
-        public int High { get; set; }
+        public int Low { get; private set; }
+        public int High { get; private set; }
 
         public Interval(int low, int high)
         {
@@ -24,32 +24,51 @@ namespace GFGCodes
         }
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    public class BinarySearchIntervalTreeNode
+    public class Meeting
     {
-        public BinarySearchIntervalTreeNode LeftNode { get; set; }
-        public BinarySearchIntervalTreeNode RightNode { get; set; }
-        public Interval NodeInterval { get; set; }      
-       
-        public BinarySearchIntervalTreeNode(Interval interval)
+        public Interval MeetingInterval { get; private set; }
+
+        public int MeetingSizeRequested { get; private set; }
+
+        public string MeetingRequestorId { get; private set; }
+
+        public Meeting(string meetingRequestorId, Interval meetingInterval, int meetingSizeRequested, int meetingRoomId)
         {
-            this.NodeInterval = interval;
-            LeftNode = RightNode = null;
+            this.MeetingRequestorId = meetingRequestorId;
+            this.MeetingInterval = meetingInterval;
+            this.MeetingSizeRequested = MeetingSizeRequested;
         }
     }
 
-    public class BinarySearchIntervalTree
+    /// <summary>
+    /// 
+    /// </summary>
+    public class MeetingTreeNode
     {
-        private BinarySearchIntervalTreeNode root;
+        public MeetingTreeNode LeftMeeting { get; set; }
+        public MeetingTreeNode RightMeeting { get; set; }
+        public Meeting Meeting { get; private set; }      
+       
+        public MeetingTreeNode(Meeting interval)
+        {
+            this.Meeting = interval;
+            LeftMeeting = RightMeeting = null;
+        }
+    }
+
+    /// <summary>
+    /// to do: this is currently bst, need to make it balancing bst later
+    /// </summary>
+    public class MeetingRoomTimeLine
+    {
+        private MeetingTreeNode root;
 
         // to do
-        public bool Add(Interval interval)
+        public bool Add(Meeting interval)
         {
             if (root == null)
             {
-                root = new BinarySearchIntervalTreeNode(interval);
+                root = new MeetingTreeNode(interval);
                 return true;
             }
             else
@@ -58,30 +77,31 @@ namespace GFGCodes
             }
         }
 
-        private bool PrivateAdd(BinarySearchIntervalTreeNode root, Interval interval)
+        private bool PrivateAdd(MeetingTreeNode root, Meeting interval)
         {
-            if (interval.High <= root.NodeInterval.Low)
+            // can use a Comparer later
+            if (interval.MeetingInterval.High <= root.Meeting.MeetingInterval.Low)
             {
-                if (root.LeftNode == null)
+                if (root.LeftMeeting == null)
                 {
-                    root.LeftNode = new BinarySearchIntervalTreeNode(interval);
+                    root.LeftMeeting = new MeetingTreeNode(interval);
                     return true;
                 }
                 else
                 {
-                   return PrivateAdd(root.LeftNode, interval);
+                   return PrivateAdd(root.LeftMeeting, interval);
                 }
             }
-            else if (interval.Low >= root.NodeInterval.High)
+            else if (interval.MeetingInterval.Low >= root.Meeting.MeetingInterval.High)
             {
-                if (root.RightNode == null)
+                if (root.RightMeeting == null)
                 {
-                    root.RightNode = new BinarySearchIntervalTreeNode(interval);
+                    root.RightMeeting = new MeetingTreeNode(interval);
                     return true;
                 }
                 else
                 {
-                    return PrivateAdd(root.RightNode, interval);
+                    return PrivateAdd(root.RightMeeting, interval);
                 }
             }
             else
@@ -100,38 +120,38 @@ namespace GFGCodes
             }
         }
 
-        public bool CheckAvailability(Interval interval)
+        public bool CheckAvailability(Meeting interval)
         {
             if (root == null)
-            {
-                
+            {                
                 return true;
             }
+
             return PrivateCheckAvailability(root, interval);
         }
 
-        private bool PrivateCheckAvailability(BinarySearchIntervalTreeNode root, Interval interval)
+        private bool PrivateCheckAvailability(MeetingTreeNode root, Meeting interval)
         {
-            if (interval.High <= root.NodeInterval.Low)
+            if (interval.MeetingInterval.High <= root.Meeting.MeetingInterval.Low)
             {
-                if (root.LeftNode == null)
+                if (root.LeftMeeting == null)
                 {
                     return true;
                 }
                 else
                 {
-                    return PrivateCheckAvailability(root.LeftNode, interval);
+                    return PrivateCheckAvailability(root.LeftMeeting, interval);
                 }
             }
-            else if (interval.Low >= root.NodeInterval.High)
+            else if (interval.MeetingInterval.Low >= root.Meeting.MeetingInterval.High)
             {
-                if (root.RightNode == null)
+                if (root.RightMeeting == null)
                 {
                     return true;
                 }
                 else
                 {
-                    return PrivateCheckAvailability(root.RightNode, interval);
+                    return PrivateCheckAvailability(root.RightMeeting, interval);
                 }
             }
             else
@@ -155,11 +175,142 @@ namespace GFGCodes
         {
             return false;
         }
-
     }
 
-    class MeetingSheduling
+    public class MeetingRoom
     {
+        private Dictionary<string, MeetingRoomTimeLine> dailyScheduledMeetings;
+
+        public int Size { get; private set; }
+
+        public string MeetingRoomId { get; private set; }
+
+        public MeetingRoom(string roomId, int size)
+        {
+            this.Size = size;
+            this.MeetingRoomId = roomId;
+            this.dailyScheduledMeetings = new Dictionary<string, MeetingRoomTimeLine>();
+        }
+
+        /// <summary>
+        /// handling concurrency may not be needed for reads
+        /// this may not be 100% accurate, since there is always a time gap between suggession and booking
+        /// this still needs to be validated during booking, so we can ignore during the check
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <returns></returns>
+        public bool CheckAvailability(DateTime from, DateTime to)
+        {
+
+            return false;
+        }
+
+        /// <summary>
+        /// to do: need to handle concurrency here
+        /// should lock only the specific meetings days time line
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <returns></returns>
+        public bool BookMeeting(DateTime from, DateTime to)
+        {
+            return false;
+        }
+    }
+
+    public class MeetingShedulingManager
+    {
+        private SortedSet<int> availableSizes;
+        private SortedDictionary<int, List<MeetingRoom>> meetingRoomsBySize;
+
+        public MeetingShedulingManager()
+        {
+            this.availableSizes = new SortedSet<int>();
+            this.meetingRoomsBySize = new SortedDictionary<int, List<MeetingRoom>>();
+        }
+
+       /// <summary>
+       /// 
+       /// </summary>
+       /// <param name="all"> if true provide for till booked, else for the current date</param>
+       /// <returns></returns>
+        public double GetResourceEfficiency(bool all = false)
+        {
+            return 1.0;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="requestedSize"></param>
+        /// <returns></returns>
+        public List<string> CheckAvailability(DateTime from, DateTime to, int requestedSize)
+        {
+            return new List<string>();
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="from"></param>
+        /// <param name="to"></param>
+        /// <param name="requestedSize"></param>
+        /// <param name="meetingId"></param>
+        /// <param name="requestorId"></param>
+        /// <returns></returns>
+        public bool BookMeeting(DateTime from, DateTime to, int requestedSize, string meetingId, string requestorId)
+        {
+            return false;
+        }
+
+        /// <summary>
+        /// to do: assuming the id is unique while adding, this needs to be validated seperately
+        /// </summary>
+        /// <param name="roomSize"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        public bool AddMeetingRoom(int roomSize, string id)
+        {
+            if (!ValidateMeetingRoom(roomSize, id))
+            {
+                return false;
+            }
+
+            // to do: since this is an admin operation, no need to check for concurrency for now
+            MeetingRoom newRoom = new MeetingRoom(id, roomSize);
+
+            if (meetingRoomsBySize.ContainsKey(roomSize))
+            {
+                meetingRoomsBySize[roomSize].Add(newRoom);
+                return true;
+            }
+            else
+            {
+                if (availableSizes.Add(roomSize))
+                {
+                    return meetingRoomsBySize.TryAdd(roomSize, new List<MeetingRoom>() { newRoom });
+                }
+                else
+                {
+                    return false;
+                }
+            }           
+        }
+
+        /// <summary>
+        /// add any specific validations here
+        /// </summary>
+        /// <param name="meetingSize"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private bool ValidateMeetingRoom(int meetingSize, string id)
+        {
+            return true;
+        }
 
     }
 }
