@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
+using System.Linq;
 
 namespace GFGCodes
 {
@@ -27,17 +28,24 @@ namespace GFGCodes
 
     public class Meeting
     {
+        public string DayOfTheMetting { get; private set; }
+
         public Interval MeetingInterval { get; private set; }
 
         public int MeetingSizeRequested { get; private set; }
 
         public string MeetingRequestorId { get; private set; }
 
-        public Meeting(string meetingRequestorId, Interval meetingInterval, int meetingSizeRequested, int meetingRoomId)
+        public Meeting(int meetingSizeRequested, string day, Interval meetingInterval, string meetingRequestorId = null)
         {
-            this.MeetingRequestorId = meetingRequestorId;
             this.MeetingInterval = meetingInterval;
             this.MeetingSizeRequested = MeetingSizeRequested;
+
+            // tertiary information for validation purpose
+            this.DayOfTheMetting = day;
+
+            // this is not needed if no need to track the meeting overalaps by requestor
+            this.MeetingRequestorId = meetingRequestorId??string.Empty;
         }
     }
 
@@ -231,32 +239,51 @@ namespace GFGCodes
         }
 
         /// <summary>
+        /// to do: this can be called daily to clear data in the past to keep the memory foot print less 
+        /// </summary>
+        /// <returns></returns>
+        public bool Janitor()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// handling concurrency may not be needed for reads
         /// this may not be 100% accurate, since there is always a time gap between suggession and booking
-        /// this still needs to be validated during booking, so we can ignore during the check
+        /// this still needs to be validated during booking, so we can ignore any locking during the check
         /// </summary>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
+        /// <param name="meeting"></param>
         /// <returns></returns>
-        public bool CheckAvailability(DateTime from, DateTime to)
+        public bool CheckAvailability(Meeting meeting)
         {
+            ////var day = GetDay(roundedFrom);
+
+            ////if (!dailyScheduledMeetings.ContainsKey(day))
+            ////{
+            ////    return true;
+            ////}           
 
             return false;
         }
-
+        
         /// <summary>
         /// to do: need to handle concurrency here
         /// should lock only the specific meetings days time line
         /// </summary>
-        /// <param name="from"></param>
-        /// <param name="to"></param>
+        /// <param name="meeting"></param>
         /// <returns></returns>
-        public bool BookMeeting(DateTime from, DateTime to)
+        public bool BookMeeting(Meeting meeting)
         {
             return false;
         }
+
     }
 
+    /// <summary>
+    /// to do: this needs to be a singleton
+    /// or its data needs to be at class level
+    /// and all meeting requests should pass through it
+    /// </summary>
     public class MeetingShedulingManager
     {
         private double providedCapacity;
@@ -264,16 +291,19 @@ namespace GFGCodes
 
         // to do , need to dispose this 
         private ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
-
-        private SortedSet<int> availableSizes;
-        private SortedDictionary<int, List<MeetingRoom>> meetingRoomsBySize;
+        private readonly object lockObject =new object();
+       
+        private Dictionary<string, MeetingRoom> meetingRooms;
         private Dictionary<string, int> meetingRoomCapacity;
-
+        private SortedSet<int> availableSizes;
+        private SortedDictionary<int, SortedSet<string>> meetingRoomsBySize;
+        
         public MeetingShedulingManager()
         {
-            this.availableSizes = new SortedSet<int>();
-            this.meetingRoomsBySize = new SortedDictionary<int, List<MeetingRoom>>();
+            this.meetingRooms = new Dictionary<string, MeetingRoom>();
             this.meetingRoomCapacity = new Dictionary<string, int>();
+            this.availableSizes = new SortedSet<int>();
+            this.meetingRoomsBySize = new SortedDictionary<int, SortedSet<string>>();
         }
 
        /// <summary>
@@ -287,6 +317,11 @@ namespace GFGCodes
             rwLock.EnterReadLock();
             try
             {
+                if (bookedCapacity <= 0.0 || providedCapacity <= 0.0)
+                {
+                    resourceEfficiency = -1.0;
+                }
+
                 resourceEfficiency = providedCapacity / bookedCapacity;
             }
             catch (Exception ex)
@@ -309,11 +344,88 @@ namespace GFGCodes
         /// <param name="to"></param>
         /// <param name="requestedSize"></param>
         /// <returns></returns>
-        public List<string> CheckAvailability(DateTime from, DateTime to, int requestedSize)
+        public List<string> GetAvailableMeetingRooms(DateTime from, DateTime to, int requestedSize)
         {
+            var newMeetingRequest = ValidateAndGetMeeting(from, to, requestedSize);
+
+            if (newMeetingRequest != null)
+            {
+                // logic to check 
+
+                return new List<string>();
+            }
+
+
             return new List<string>();
         }
 
+        private Meeting ValidateAndGetMeeting(DateTime from, DateTime to, int requestedSize, string requestorId=null)
+        {
+            var roundedFrom = RoundUpDateTime(from);
+            var roundedTo = RoundUpDateTime(to);
+
+            if (roundedFrom >= roundedTo)
+            {
+                return null;
+            }
+
+            if (!DateTime.Equals(roundedFrom.Date, roundedTo.Date))
+            {
+                return null;
+            }
+
+            if (availableSizes.Count == 0)
+            {
+                return null;
+            }
+
+            if (availableSizes.First() > requestedSize)
+            {
+                return null;
+            }
+
+            if (availableSizes.Last() < requestedSize)
+            {
+                return null;
+            }
+
+            // reject if future date is greater than two weeks , 
+            if (roundedFrom.Date > DateTime.Now.Date.AddDays(14))
+            {
+                return null;
+            }
+          
+            return new Meeting(requestedSize, GetDay(roundedFrom), GetInterval(roundedFrom, roundedTo), requestorId);
+        }
+
+        /// <summary>
+        /// round the time to 5 minutes block
+        /// </summary>
+        /// <param name="dateToRound"></param>
+        /// <returns></returns>
+        private static DateTime RoundUpDateTime(DateTime dateToRound)
+        {
+            // rounding to its 5 minutes, this can be done to minute as well 
+            TimeSpan roundPeriod = new TimeSpan(0, 0, 5, 0);
+
+            var delta = dateToRound.Ticks % roundPeriod.Ticks;
+
+            // keeping it to UTC standard
+            return new DateTime(dateToRound.Ticks - delta, DateTimeKind.Utc);
+        }
+
+        private static Interval GetInterval(DateTime roundedFrom, DateTime roundedTo)
+        {
+            int low = (roundedFrom.Hour * 60 + roundedFrom.Minute) / 5;
+            int high = (roundedTo.Hour * 60 + roundedTo.Minute) / 5;
+
+            return new Interval(low, high);
+        }
+
+        private static string GetDay(DateTime roundedFrom)
+        {
+            return roundedFrom.ToShortDateString();
+        }
 
         /// <summary>
         /// 
@@ -321,17 +433,32 @@ namespace GFGCodes
         /// <param name="from"></param>
         /// <param name="to"></param>
         /// <param name="requestedSize"></param>
-        /// <param name="meetingId"></param>
+        /// <param name="meetingRoomId"></param>
         /// <param name="requestorId"></param>
         /// <returns></returns>
-        public bool BookMeeting(DateTime from, DateTime to, int requestedSize, string meetingId, string requestorId)
+        public bool BookMeeting(DateTime from, DateTime to, int requestedSize, string meetingRoomId, string requestorId)
         {
-            var flag = false;
+            if (!meetingRooms.ContainsKey(meetingRoomId))
+            {
+                return false;
+            }
 
+           var meetingRequest =  ValidateAndGetMeeting(from, to, requestedSize, requestorId);
+
+            if (meetingRequest == null)
+            {
+                return false;
+            }
+
+            // not considering if requestorId is already part of another overlapping meeting, it can be easily done 
             // Try to book the meeting room
+
+            var meetingRoom = meetingRooms[meetingRoomId];
+            var flag = meetingRoom.BookMeeting(meetingRequest);
+
             // this is assuming Int64 is sufficient for providedCapacity, providedCapacity
             // to do: this should be changed later ..
-
+            
             if (flag)
             {
                 try
@@ -352,6 +479,7 @@ namespace GFGCodes
             return flag;
         }
 
+        #region admin methods
         /// <summary>
         /// to do: assuming the id is unique while adding, this needs to be validated seperately
         /// </summary>
@@ -364,27 +492,34 @@ namespace GFGCodes
             {
                 return false;
             }
-
-            // to do: since this is an admin operation, no need to check for concurrency for now..
+          
             MeetingRoom newRoom = new MeetingRoom(id, roomSize);
 
-            if (meetingRoomsBySize.ContainsKey(roomSize))
+            // to do , this lock is inefficient can be changed later
+            lock (lockObject)
             {
-                meetingRoomsBySize[roomSize].Add(newRoom);
-                return true;
+                if (meetingRooms.TryAdd(newRoom.MeetingRoomId, newRoom))
+                {
+                    if (meetingRoomCapacity.TryAdd(newRoom.MeetingRoomId, newRoom.Size))
+                    {
+                        if (!availableSizes.Contains(roomSize))
+                        {
+                            availableSizes.Add(roomSize);
+                        }
+
+                        if (meetingRoomsBySize.ContainsKey(roomSize))
+                        {
+                            meetingRoomsBySize[roomSize].Add(newRoom.MeetingRoomId);
+                        }
+                        else
+                        {
+                            meetingRoomsBySize.TryAdd(roomSize, new SortedSet<string>() { newRoom.MeetingRoomId });
+                        }
+                    }
+                }
             }
-            else
-            {
-                if (availableSizes.Add(roomSize))
-                {
-                    meetingRoomCapacity.TryAdd(newRoom.MeetingRoomId, newRoom.Size);
-                    return meetingRoomsBySize.TryAdd(roomSize, new List<MeetingRoom>() { newRoom });
-                }
-                else
-                {
-                    return false;
-                }
-            }           
+
+            return true;
         }
 
         /// <summary>
@@ -395,8 +530,13 @@ namespace GFGCodes
         /// <returns></returns>
         private bool ValidateMeetingRoom(int meetingSize, string id)
         {
+            if (meetingRooms.ContainsKey(id))
+            {
+                return false;
+            }
+
             return true;
         }
-
+        #endregion
     }
 }
