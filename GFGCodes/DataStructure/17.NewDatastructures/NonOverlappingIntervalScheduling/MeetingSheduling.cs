@@ -77,7 +77,7 @@ namespace GFGCodes
         private readonly object lockObject = new object();       
 
         // to do
-        public bool Add(Meeting interval)
+        public bool BookMeetingSlot(Meeting interval)
         {
             if (root == null)
             {
@@ -226,6 +226,7 @@ namespace GFGCodes
 
     public class MeetingRoom
     {
+        private readonly object lockObject = new object();
         private Dictionary<string, MeetingRoomTimeLine> dailyScheduledMeetings;
 
         public int Size { get; private set; }
@@ -259,16 +260,20 @@ namespace GFGCodes
         {
             var flag = false;
 
-            ////var day = GetDay(roundedFrom);
+            if (dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
+            {
+                var timeline = dailyScheduledMeetings[meeting.DayOfTheMetting];
 
-            ////if (!dailyScheduledMeetings.ContainsKey(day))
-            ////{
-            ////    return true;
-            ////}           
+                flag = timeline.CheckAvailability(meeting);
+            }
+            else
+            {
+                flag = true;
+            }
 
             return Task.FromResult<bool>(flag);
         }
-        
+
         /// <summary>
         /// to do: need to handle concurrency here
         /// should lock only the specific meetings days time line
@@ -277,9 +282,21 @@ namespace GFGCodes
         /// <returns></returns>
         public bool BookMeeting(Meeting meeting)
         {
-            return false;
-        }
+            if (!dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
+            {
+                // to do, this can be optimized
+                lock (lockObject)
+                {
+                    if (!dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
+                    {
+                        dailyScheduledMeetings.TryAdd(meeting.DayOfTheMetting, new MeetingRoomTimeLine());
+                    }
+                }
+            }
 
+            var timeline = dailyScheduledMeetings[meeting.DayOfTheMetting];
+            return timeline.BookMeetingSlot(meeting);
+        }
     }
 
     /// <summary>
@@ -389,86 +406,6 @@ namespace GFGCodes
             return new List<string>();
         }
 
-        private async Task<string> PrivateCheckMeetingRoomAvailability(Meeting newMeetingRequest, string meetingRoom)
-        {
-            var result = await meetingRooms[meetingRoom].CheckAvailability(newMeetingRequest);
-
-            if (result)
-            {
-                return meetingRoom;
-            }
-
-            return null;
-        }
-
-        private Meeting ValidateAndGetMeeting(DateTime from, DateTime to, int requestedSize, string requestorId=null)
-        {
-            var roundedFrom = RoundUpDateTime(from);
-            var roundedTo = RoundUpDateTime(to);
-
-            if (roundedFrom >= roundedTo)
-            {
-                return null;
-            }
-
-            if (!DateTime.Equals(roundedFrom.Date, roundedTo.Date))
-            {
-                return null;
-            }
-
-            if (availableSizes.Count == 0)
-            {
-                return null;
-            }
-
-            if (availableSizes.First() > requestedSize)
-            {
-                return null;
-            }
-
-            if (availableSizes.Last() < requestedSize)
-            {
-                return null;
-            }
-
-            // reject if future date is greater than two weeks , 
-            if (roundedFrom.Date > DateTime.Now.Date.AddDays(14))
-            {
-                return null;
-            }
-          
-            return new Meeting(requestedSize, GetDay(roundedFrom), GetInterval(roundedFrom, roundedTo), requestorId);
-        }
-
-        /// <summary>
-        /// round the time to 5 minutes block
-        /// </summary>
-        /// <param name="dateToRound"></param>
-        /// <returns></returns>
-        private static DateTime RoundUpDateTime(DateTime dateToRound)
-        {
-            // rounding to its 5 minutes, this can be done to minute as well 
-            TimeSpan roundPeriod = new TimeSpan(0, 0, 5, 0);
-
-            var delta = dateToRound.Ticks % roundPeriod.Ticks;
-
-            // keeping it to UTC standard
-            return new DateTime(dateToRound.Ticks - delta, DateTimeKind.Utc);
-        }
-
-        private static Interval GetInterval(DateTime roundedFrom, DateTime roundedTo)
-        {
-            int low = (roundedFrom.Hour * 60 + roundedFrom.Minute) / 5;
-            int high = (roundedTo.Hour * 60 + roundedTo.Minute) / 5;
-
-            return new Interval(low, high);
-        }
-
-        private static string GetDay(DateTime roundedFrom)
-        {
-            return roundedFrom.ToShortDateString();
-        }
-
         /// <summary>
         /// 
         /// </summary>
@@ -503,23 +440,111 @@ namespace GFGCodes
             
             if (flag)
             {
-                try
-                {
-                    rwLock.EnterWriteLock();
-                    this.providedCapacity += requestedSize;
-                    this.bookedCapacity += meetingRoomCapacity[requestorId];
-                }
-                catch (Exception ex)
-                {
-                }
-                finally
-                {
-                    rwLock.ExitWriteLock();
-                }
+                UpdateResourceEfficiencyTrackers(requestedSize, requestorId);
             }
 
             return flag;
         }
+
+        #region private methods
+
+        private void UpdateResourceEfficiencyTrackers(int requestedSize, string requestorId)
+        {
+            try
+            {
+                rwLock.EnterWriteLock();
+                this.providedCapacity += requestedSize;
+                this.bookedCapacity += meetingRoomCapacity[requestorId];
+            }
+            catch (Exception ex)
+            {
+            }
+            finally
+            {
+                rwLock.ExitWriteLock();
+            }
+        }
+
+        private async Task<string> PrivateCheckMeetingRoomAvailability(Meeting newMeetingRequest, string meetingRoom)
+        {
+            var result = await meetingRooms[meetingRoom].CheckAvailability(newMeetingRequest);
+
+            if (result)
+            {
+                return meetingRoom;
+            }
+
+            return null;
+        }
+
+        private Meeting ValidateAndGetMeeting(DateTime from, DateTime to, int requestedSize, string requestorId = null)
+        {
+            var roundedFrom = RoundUpDateTime(from);
+            var roundedTo = RoundUpDateTime(to);
+
+            if (roundedFrom >= roundedTo)
+            {
+                return null;
+            }
+
+            if (!DateTime.Equals(roundedFrom.Date, roundedTo.Date))
+            {
+                return null;
+            }
+
+            if (availableSizes.Count == 0)
+            {
+                return null;
+            }
+
+            if (availableSizes.First() > requestedSize)
+            {
+                return null;
+            }
+
+            if (availableSizes.Last() < requestedSize)
+            {
+                return null;
+            }
+
+            // reject if future date is greater than two weeks , 
+            if (roundedFrom.Date > DateTime.Now.Date.AddDays(14))
+            {
+                return null;
+            }
+
+            return new Meeting(requestedSize, GetDay(roundedFrom), GetInterval(roundedFrom, roundedTo), requestorId);
+        }
+
+        /// <summary>
+        /// round the time to 5 minutes block
+        /// </summary>
+        /// <param name="dateToRound"></param>
+        /// <returns></returns>
+        private static DateTime RoundUpDateTime(DateTime dateToRound)
+        {
+            // rounding to its 5 minutes, this can be done to minute as well 
+            TimeSpan roundPeriod = new TimeSpan(0, 0, 5, 0);
+
+            var delta = dateToRound.Ticks % roundPeriod.Ticks;
+
+            // keeping it to UTC standard
+            return new DateTime(dateToRound.Ticks - delta, DateTimeKind.Utc);
+        }
+
+        private static Interval GetInterval(DateTime roundedFrom, DateTime roundedTo)
+        {
+            int low = (roundedFrom.Hour * 60 + roundedFrom.Minute) / 5;
+            int high = (roundedTo.Hour * 60 + roundedTo.Minute) / 5;
+
+            return new Interval(low, high);
+        }
+
+        private static string GetDay(DateTime roundedFrom)
+        {
+            return roundedFrom.ToShortDateString();
+        }
+        #endregion
 
         #region admin methods
         /// <summary>
