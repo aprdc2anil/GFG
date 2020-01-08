@@ -59,6 +59,7 @@ namespace GFGCodes
 
     /// <summary>
     /// to do: this is currently bst, need to make it balancing bst later
+    /// to do: currently locking at write can block the cpu threads, this should be optimized for more efficiency 
     /// NOTE: This is an individual timeline of a specifcific meeting room and for specific day     
     /// </summary>
     public class MeetingRoomTimeLine
@@ -71,6 +72,8 @@ namespace GFGCodes
         {
             if (root == null)
             {
+                /// to do: currently locking at write can block the cpu threads, 
+                /// this should be optimized for more efficiency
                 lock (lockObject)
                 {
                     if (root == null)
@@ -99,7 +102,7 @@ namespace GFGCodes
                 if (root.LeftMeeting == null)
                 {
                     var boolFlag = false;
-
+                    
                     lock (lockObject)
                     {
                         if (root.LeftMeeting == null)
@@ -256,23 +259,47 @@ namespace GFGCodes
 
     public class MeetingShedulingManager
     {
+        private double providedCapacity;
+        private double bookedCapacity;
+
+        // to do , need to dispose this 
+        private ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
+
         private SortedSet<int> availableSizes;
         private SortedDictionary<int, List<MeetingRoom>> meetingRoomsBySize;
+        private Dictionary<string, int> meetingRoomCapacity;
 
         public MeetingShedulingManager()
         {
             this.availableSizes = new SortedSet<int>();
             this.meetingRoomsBySize = new SortedDictionary<int, List<MeetingRoom>>();
+            this.meetingRoomCapacity = new Dictionary<string, int>();
         }
 
        /// <summary>
        /// 
        /// </summary>
-       /// <param name="all"> if true provide for till booked, else for the current date</param>
        /// <returns></returns>
-        public double GetResourceEfficiency(bool all = false)
+        public double GetResourceEfficiency()
         {
-            return 1.0;
+            double resourceEfficiency = 1.0;
+
+            rwLock.EnterReadLock();
+            try
+            {
+                resourceEfficiency = providedCapacity / bookedCapacity;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("some error occured", ex);
+                resourceEfficiency = -1.0;
+            }
+            finally
+            {
+                rwLock.ExitReadLock();
+            }
+
+            return resourceEfficiency;
         }
 
         /// <summary>
@@ -299,7 +326,30 @@ namespace GFGCodes
         /// <returns></returns>
         public bool BookMeeting(DateTime from, DateTime to, int requestedSize, string meetingId, string requestorId)
         {
-            return false;
+            var flag = false;
+
+            // Try to book the meeting room
+            // this is assuming Int64 is sufficient for providedCapacity, providedCapacity
+            // to do: this should be changed later ..
+
+            if (flag)
+            {
+                try
+                {
+                    rwLock.EnterWriteLock();
+                    this.providedCapacity += requestedSize;
+                    this.bookedCapacity += meetingRoomCapacity[requestorId];
+                }
+                catch (Exception ex)
+                {
+                }
+                finally
+                {
+                    rwLock.ExitWriteLock();
+                }
+            }
+
+            return flag;
         }
 
         /// <summary>
@@ -315,7 +365,7 @@ namespace GFGCodes
                 return false;
             }
 
-            // to do: since this is an admin operation, no need to check for concurrency for now
+            // to do: since this is an admin operation, no need to check for concurrency for now..
             MeetingRoom newRoom = new MeetingRoom(id, roomSize);
 
             if (meetingRoomsBySize.ContainsKey(roomSize))
@@ -327,6 +377,7 @@ namespace GFGCodes
             {
                 if (availableSizes.Add(roomSize))
                 {
+                    meetingRoomCapacity.TryAdd(newRoom.MeetingRoomId, newRoom.Size);
                     return meetingRoomsBySize.TryAdd(roomSize, new List<MeetingRoom>() { newRoom });
                 }
                 else
