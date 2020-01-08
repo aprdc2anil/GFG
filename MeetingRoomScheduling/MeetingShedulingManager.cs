@@ -8,31 +8,31 @@ using MeetingRoomScheduling.Internal;
 namespace MeetingRoomScheduling
 {
     /// <summary>
-    /// to do: this needs to be a singleton
-    /// or its data needs to be at class level
-    /// and all meeting requests should pass through it
+    ///
     /// </summary>
     public class MeetingShedulingManager
     {
-        private double providedCapacity;
-        private double bookedCapacity;
+        // lazy threadsafe singleton implimentaion 
+        private static readonly Lazy<MeetingShedulingManager> lazy = new Lazy<MeetingShedulingManager>
+           (() => new MeetingShedulingManager());
+
+        private MeetingShedulingManager()
+        {
+        }
+
+        public static MeetingShedulingManager Instance { get { return lazy.Value; } }
+
+        private static double providedCapacity;
+        private static double bookedCapacity;
 
         // to do , need to dispose this 
-        private ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
-        private readonly object lockObject = new object();
+        private static readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
+        private static readonly object lockObject = new object();
 
-        private Dictionary<string, MeetingRoom> meetingRooms;
-        private Dictionary<string, int> meetingRoomCapacity;
-        private SortedSet<int> availableSizes;
-        private SortedDictionary<int, SortedSet<string>> meetingRoomsBySize;
-
-        public MeetingShedulingManager()
-        {
-            this.meetingRooms = new Dictionary<string, MeetingRoom>();
-            this.meetingRoomCapacity = new Dictionary<string, int>();
-            this.availableSizes = new SortedSet<int>();
-            this.meetingRoomsBySize = new SortedDictionary<int, SortedSet<string>>();
-        }
+        private static readonly Dictionary<string, MeetingRoom> meetingRooms= new Dictionary<string, MeetingRoom>();
+        private static readonly Dictionary<string, int> meetingRoomCapacity = new Dictionary<string, int>();
+        private static readonly SortedSet<int> availableSizes = new SortedSet<int>();
+        private static readonly SortedDictionary<int, SortedSet<string>> meetingRoomsBySize = new SortedDictionary<int, SortedSet<string>>();
 
         /// <summary>
         /// 
@@ -161,8 +161,8 @@ namespace MeetingRoomScheduling
             try
             {
                 rwLock.EnterWriteLock();
-                this.providedCapacity += requestedSize;
-                this.bookedCapacity += meetingRoomCapacity[requestorId];
+                providedCapacity += requestedSize;
+                bookedCapacity += meetingRoomCapacity[requestorId];
             }
             catch (Exception ex)
             {

@@ -4,7 +4,7 @@ namespace MRScheduling
 {
     public class MeetingScheduling
     {
-        private MeetingShedulingManager meetingSchedulingMngr = new MeetingShedulingManager();
+        private MeetingShedulingManager meetingSchedulingMngr = MeetingShedulingManager.Instance;
 
         public void GenerateSeedRoomsAndMeetings()
         {
