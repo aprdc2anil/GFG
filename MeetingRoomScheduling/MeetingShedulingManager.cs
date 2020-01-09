@@ -19,7 +19,12 @@ namespace MeetingRoomScheduling
         private MeetingShedulingManager()
         {
         }
-        
+
+        ~MeetingShedulingManager()
+        {
+            rwLock?.Dispose();
+        }
+
         public static MeetingShedulingManager Instance { get { return lazy.Value; } }
 
         private static double providedCapacity;
@@ -147,6 +152,21 @@ namespace MeetingRoomScheduling
             }
 
             return flag;
+        }
+
+        /// <summary>
+        /// to do: this can be called daily to clear data in the past to keep the memory foot print less 
+        /// </summary>
+        /// <returns></returns>
+        public bool Janitor()
+        {
+            // call each meetingrooms janitor
+            foreach (var mr in meetingRooms)
+            {
+                mr.Value.Janitor();
+            }
+
+            return true;
         }
 
         #region private methods

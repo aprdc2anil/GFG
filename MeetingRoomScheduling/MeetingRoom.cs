@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MeetingRoomScheduling.Internal
@@ -6,9 +8,10 @@ namespace MeetingRoomScheduling.Internal
     /// <summary>
     /// 
     /// </summary>
-    class MeetingRoom
+    class MeetingRoom:IDisposable
     {
-        private readonly object lockObject = new object();
+        private volatile bool isDisposed = false;      
+        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
         private Dictionary<string, MeetingRoomTimeLine> dailyScheduledMeetings;
 
         public int Size { get; private set; }
@@ -20,6 +23,11 @@ namespace MeetingRoomScheduling.Internal
             this.Size = size;
             this.MeetingRoomId = roomId;
             this.dailyScheduledMeetings = new Dictionary<string, MeetingRoomTimeLine>();
+        }
+
+        ~MeetingRoom()
+        {
+            this.Dispose(false);
         }
 
         /// <summary>
@@ -41,12 +49,23 @@ namespace MeetingRoomScheduling.Internal
         public Task<bool> CheckAvailability(Meeting meeting)
         {
             var flag = false;
-
-            if (dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
+            MeetingRoomTimeLine timeline = null;
+            try
             {
-                var timeline = dailyScheduledMeetings[meeting.DayOfTheMetting];
+                rwLock.EnterReadLock();
+                if (dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
+                {
+                    timeline = dailyScheduledMeetings[meeting.DayOfTheMetting];                    
+                }                
+            }
+            finally
+            {
+                rwLock.ExitReadLock();
+            }
 
-                flag = timeline.CheckAvailability(meeting);
+            if (timeline != null)
+            {
+                timeline.CheckAvailability(meeting);
             }
             else
             {
@@ -64,20 +83,54 @@ namespace MeetingRoomScheduling.Internal
         /// <returns></returns>
         public bool BookMeeting(Meeting meeting)
         {
-            if (!dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
+            try
             {
-                // to do, this can be optimized
-                lock (lockObject)
+                try
                 {
+                    rwLock.EnterUpgradeableReadLock();
                     if (!dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
                     {
-                        dailyScheduledMeetings.Add(meeting.DayOfTheMetting, new MeetingRoomTimeLine());
+                        rwLock.EnterWriteLock();
+                        if (!dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
+                        {
+                            dailyScheduledMeetings.Add(meeting.DayOfTheMetting, new MeetingRoomTimeLine());
+                        }
+
                     }
                 }
+                finally
+                {
+                    rwLock.ExitWriteLock();
+                }
+            }
+            finally
+            {
+                rwLock.ExitUpgradeableReadLock();
             }
 
             var timeline = dailyScheduledMeetings[meeting.DayOfTheMetting];
             return timeline.BookMeetingSlot(meeting);
+        }
+
+        private void Dispose(bool disposing = true)
+        {
+            if (!isDisposed)
+            {
+                if (disposing)
+                {
+                    dailyScheduledMeetings = null;
+                }
+
+                rwLock?.Dispose();
+            }
+
+            isDisposed = true;
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
         }
     }
 }
