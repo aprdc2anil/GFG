@@ -50,18 +50,11 @@ namespace MeetingRoomScheduling.Internal
         {
             var flag = false;
             MeetingRoomTimeLine timeline = null;
-            try
+          
+            if (dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
             {
-                rwLock.EnterReadLock();
-                if (dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
-                {
-                    timeline = dailyScheduledMeetings[meeting.DayOfTheMetting];                    
-                }                
-            }
-            finally
-            {
-                rwLock.ExitReadLock();
-            }
+                timeline = dailyScheduledMeetings[meeting.DayOfTheMetting];                    
+            }           
 
             if (timeline != null)
             {
