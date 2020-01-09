@@ -11,7 +11,7 @@ namespace MeetingRoomScheduling.Internal
     class MeetingRoom:IDisposable
     {
         private volatile bool isDisposed = false;      
-        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
+        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
         private Dictionary<string, MeetingRoomTimeLine> dailyScheduledMeetings;
 
         public int Size { get; private set; }
@@ -78,22 +78,18 @@ namespace MeetingRoomScheduling.Internal
         {
             try
             {
-                try
+                rwLock.EnterUpgradeableReadLock();
+                if (!dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
                 {
-                    rwLock.EnterUpgradeableReadLock();
-                    if (!dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
+                    try
                     {
                         rwLock.EnterWriteLock();
-                        if (!dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
-                        {
-                            dailyScheduledMeetings.Add(meeting.DayOfTheMetting, new MeetingRoomTimeLine());
-                        }
-
+                        dailyScheduledMeetings.Add(meeting.DayOfTheMetting, new MeetingRoomTimeLine());
                     }
-                }
-                finally
-                {
-                    rwLock.ExitWriteLock();
+                    finally
+                    {
+                        rwLock.ExitWriteLock();
+                    }
                 }
             }
             finally

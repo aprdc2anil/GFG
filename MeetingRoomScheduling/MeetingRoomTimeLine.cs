@@ -1,34 +1,52 @@
-﻿namespace MeetingRoomScheduling.Internal
+﻿using System;
+using System.Threading;
+
+namespace MeetingRoomScheduling.Internal
 {
     /// <summary>
     /// to do: this is currently bst, need to make it balancing bst later
     /// to do: currently locking at write can block the cpu threads, this should be optimized for more efficiency 
     /// NOTE: This is an individual timeline of a specifcific meeting room and for specific day     
     /// </summary>
-    class MeetingRoomTimeLine
+    class MeetingRoomTimeLine : IDisposable
     {
-        private MeetingTreeNode root;
-        private readonly object lockObject = new object();
+        private volatile bool isDisposed = false;
+        private MeetingTreeNode root;       
+        private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
 
         // to do
         public bool BookMeetingSlot(Meeting interval)
         {
-            if (root == null)
+            var flag = false;
+
+            try
             {
-                /// to do: currently locking at write can block the cpu threads, 
-                /// this should be optimized for more efficiency
-                lock (lockObject)
+                rwLock.EnterUpgradeableReadLock();
+                if (root == null)
                 {
-                    if (root == null)
+                    try
                     {
+                        rwLock.EnterWriteLock();
+
+                        // to do: if this is starting of the end of the day then this is skewed, BST wont work, 
+                        // needs to be Balancing BST 
+
                         root = new MeetingTreeNode(interval);
+                        flag = true;
                     }
-                    else
+                    finally
                     {
-                        return false;
+                        rwLock.ExitWriteLock();
                     }
                 }
+            }
+            finally
+            {
+                rwLock.ExitUpgradeableReadLock();
+            }
 
+            if (flag)
+            {
                 return true;
             }
             else
@@ -46,13 +64,26 @@
                 {
                     var boolFlag = false;
 
-                    lock (lockObject)
+                    try
                     {
+                        rwLock.EnterUpgradeableReadLock();
                         if (root.LeftMeeting == null)
                         {
-                            root.LeftMeeting = new MeetingTreeNode(interval);
-                            boolFlag = true;
+                            try
+                            {
+                                rwLock.EnterWriteLock();
+                                root.LeftMeeting = new MeetingTreeNode(interval);
+                                boolFlag = true;
+                            }
+                            finally
+                            {
+                                rwLock.ExitWriteLock();
+                            }
                         }
+                    }
+                    finally
+                    {
+                        rwLock.ExitUpgradeableReadLock();
                     }
 
                     return boolFlag;
@@ -69,13 +100,26 @@
                 {
                     var boolFlag = false;
 
-                    lock (lockObject)
+                    try
                     {
+                        rwLock.EnterUpgradeableReadLock();
                         if (root.RightMeeting == null)
                         {
-                            root.RightMeeting = new MeetingTreeNode(interval);
-                            boolFlag = true;
+                            try
+                            {
+                                rwLock.EnterWriteLock();
+                                root.RightMeeting = new MeetingTreeNode(interval);
+                                boolFlag = true;
+                            }
+                            finally
+                            {
+                                rwLock.ExitWriteLock();
+                            }
                         }
+                    }
+                    finally
+                    {
+                        rwLock.ExitUpgradeableReadLock();
                     }
 
                     return boolFlag;
@@ -151,10 +195,30 @@
             }
         }
 
-        // to do , similar to bst deletion
-        public bool Delete()
+        public void Dispose()
         {
-            return false;
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~MeetingRoomTimeLine()
+        {
+            this.Dispose(false);
+        }
+
+        private void Dispose(bool disposing = true)
+        {
+            if (!isDisposed)
+            {
+                if (disposing)
+                {
+                    root = null;
+                }
+
+                rwLock?.Dispose();
+            }
+
+            isDisposed = true;
         }
     }
 }
