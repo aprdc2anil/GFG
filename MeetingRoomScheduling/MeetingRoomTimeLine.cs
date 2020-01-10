@@ -8,7 +8,7 @@ namespace MeetingRoomScheduling.Internal
     /// to do: currently locking at write can block the cpu threads, this should be optimized for more efficiency 
     /// NOTE: This is an individual timeline of a specifcific meeting room and for specific day     
     /// </summary>
-    class MeetingRoomTimeLine : IDisposable
+    class MeetingRoomTimeLine : IMeetingRoomTimeLine
     {
         private volatile bool isDisposed = false;
         private MeetingTreeNode root;       
@@ -19,30 +19,32 @@ namespace MeetingRoomScheduling.Internal
         {
             var flag = false;
 
-            try
+            if (root == null)
             {
-                rwLock.EnterUpgradeableReadLock();
-                if (root == null)
+                try
                 {
-                    try
+                    rwLock.EnterUpgradeableReadLock();
+                    if (root == null)
                     {
-                        rwLock.EnterWriteLock();
+                        try
+                        {
+                            rwLock.EnterWriteLock();
 
-                        // to do: if this is starting of the end of the day then this is skewed, BST wont work, 
-                        // needs to be Balancing BST 
-
-                        root = new MeetingTreeNode(interval);
-                        flag = true;
-                    }
-                    finally
-                    {
-                        rwLock.ExitWriteLock();
+                            // to do: if this is starting of the end of the day then this is skewed, BST wont work, 
+                            // needs to be Balancing BST
+                            root = new MeetingTreeNode(interval);
+                            flag = true;
+                        }
+                        finally
+                        {
+                            rwLock.ExitWriteLock();
+                        }
                     }
                 }
-            }
-            finally
-            {
-                rwLock.ExitUpgradeableReadLock();
+                finally
+                {
+                    rwLock.ExitUpgradeableReadLock();
+                }
             }
 
             if (flag)

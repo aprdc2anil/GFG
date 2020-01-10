@@ -12,7 +12,11 @@ namespace MeetingRoomScheduling.Internal
     {
         private volatile bool isDisposed = false;      
         private readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim(LockRecursionPolicy.NoRecursion);
-        private Dictionary<string, MeetingRoomTimeLine> dailyScheduledMeetings;
+        private Dictionary<string, IMeetingRoomTimeLine> dailyScheduledMeetings;
+        
+        // lazy factory
+        private static readonly Lazy<MeetingRoomTimeLineFactory> lazyMRTLFactory = new Lazy<MeetingRoomTimeLineFactory>
+           (() => new MeetingRoomTimeLineFactory());
 
         public int Size { get; private set; }
 
@@ -22,7 +26,7 @@ namespace MeetingRoomScheduling.Internal
         {
             this.Size = size;
             this.MeetingRoomId = roomId;
-            this.dailyScheduledMeetings = new Dictionary<string, MeetingRoomTimeLine>();
+            this.dailyScheduledMeetings = new Dictionary<string, IMeetingRoomTimeLine>();
         }
 
         ~MeetingRoom()
@@ -49,7 +53,7 @@ namespace MeetingRoomScheduling.Internal
         public Task<bool> CheckAvailability(Meeting meeting)
         {
             var flag = false;
-            MeetingRoomTimeLine timeline = null;
+            IMeetingRoomTimeLine timeline = null;
           
             if (dailyScheduledMeetings.ContainsKey(meeting.DayOfTheMetting))
             {
@@ -58,7 +62,7 @@ namespace MeetingRoomScheduling.Internal
 
             if (timeline != null)
             {
-                timeline.CheckAvailability(meeting);
+                flag = timeline.CheckAvailability(meeting);
             }
             else
             {
@@ -84,7 +88,7 @@ namespace MeetingRoomScheduling.Internal
                     try
                     {
                         rwLock.EnterWriteLock();
-                        dailyScheduledMeetings.Add(meeting.DayOfTheMetting, new MeetingRoomTimeLine());
+                        dailyScheduledMeetings.Add(meeting.DayOfTheMetting, lazyMRTLFactory.Value.GetMeetingRoomTimeLine());
                     }
                     finally
                     {
