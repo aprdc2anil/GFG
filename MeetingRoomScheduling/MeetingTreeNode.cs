@@ -9,9 +9,9 @@
         public MeetingTreeNode RightMeeting { get; set; }
         public Meeting Meeting { get; private set; }
 
-        public MeetingTreeNode(Meeting interval)
+        public MeetingTreeNode(Meeting meeting)
         {
-            this.Meeting = interval;
+            this.Meeting = meeting;
             LeftMeeting = RightMeeting = null;
         }
     }

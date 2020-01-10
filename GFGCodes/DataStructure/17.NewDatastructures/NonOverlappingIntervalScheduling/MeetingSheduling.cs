@@ -92,42 +92,89 @@ namespace GFGCodes
 
             foreach (var size in seedSizeRequests)
             {
-                var availableMeetingsTask = meetingSchedulingMngr.GetAvailableMeetingRooms(startTime, endTime, size);
-                var listOfAvailableMeetings = availableMeetingsTask.Result;
-
-                if (listOfAvailableMeetings.Any())
-                {
-                    Console.WriteLine("List of available meetings for time: {0}-{1} of size {2} are:", startTime, endTime, size);
-                    Console.WriteLine(string.Join(" ", listOfAvailableMeetings));
-                    bool isSuccess = meetingSchedulingMngr.BookMeeting(startTime, endTime, size, listOfAvailableMeetings[0], "x");
-
-                    if (isSuccess)
-                    {
-                        Console.WriteLine("meeting IS booked for time: {0}-{1} of size {2} and meetingroomid:{3}", startTime, endTime, size, listOfAvailableMeetings[0]);
-                        Console.WriteLine("Resource efficiency so far: {0}", meetingSchedulingMngr.GetResourceEfficiency());
-                    }
-                    else
-                    {
-                        Console.WriteLine("meeting NOT booked for time: {0}-{1} of size {2} and meetingroomid:{3}", startTime, endTime, size, listOfAvailableMeetings[0]);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("meeting rooms for time: {0}-{1} of size {2} are not available", startTime, endTime, size);
-                }
+                bookHelper(startTime, endTime, size);
             }
 
             Console.WriteLine("-----------------seed meetings end------------------------");
-
-
         }
 
         public static void RunTestCases()
         {
             // test case 1 
+            // since all meetings are booked , if we try for any meeting room it should fail
+
+            Console.WriteLine("------------testcase1------------");
+            var currTime = DateTime.UtcNow;
+            DateTime startTime = new DateTime(currTime.Year, currTime.Month, currTime.Day, currTime.Hour + 1, 0, 0, DateTimeKind.Utc);
+            DateTime endTime = startTime.AddMinutes(85);
+
+            
+            bookHelper(startTime, endTime, 8);
 
 
+            // test case 2 overlapping intervals shoudld fail 
+            // since all meetings are booked , if we try for any meeting room it should fail
+            Console.WriteLine("---------testcase2-----------------");
+            startTime = startTime.AddMinutes(25);
+            
+            bookHelper(startTime, endTime, 8);
 
+            // test case 3 next meeting with preious endtime should succede
+            // since all meetings are booked , if we try for any meeting room it should fail
+            Console.WriteLine("------------testcase3---------------");
+            startTime = endTime;
+
+            endTime = startTime.AddMinutes(30);
+
+            for (int j = 1; j < 35; ++j)
+            {
+                bookHelper(startTime, endTime, j);
+            }
+
+          
+            Console.WriteLine("---------testcase4-----------------");
+            startTime = startTime.AddMinutes(25);
+
+            bookHelper(startTime, endTime, 8);
+
+           
+            Console.WriteLine("------------testcase5---------------");
+            startTime = endTime;
+
+            endTime = startTime.AddMinutes(30);
+
+            for (int j = 8; j < 35; j=j+2)
+            {
+                bookHelper(startTime, endTime, j);
+            }
+
+        }
+
+        private static void bookHelper(DateTime startTime, DateTime endTime, int size)
+        {
+            var availableMeetingsTask = meetingSchedulingMngr.GetAvailableMeetingRooms(startTime, endTime, size);
+            var listOfAvailableMeetings = availableMeetingsTask.Result;
+
+            if (listOfAvailableMeetings.Any())
+            {
+                Console.WriteLine("List of available meetings for time: {0}-{1} of size {2} are:", startTime, endTime, size);
+                Console.WriteLine(string.Join(" ", listOfAvailableMeetings));
+                bool isSuccess = meetingSchedulingMngr.BookMeeting(startTime, endTime, size, listOfAvailableMeetings[0], "x");
+
+                if (isSuccess)
+                {
+                    Console.WriteLine("meeting IS booked for time: {0}-{1} of size {2} and meetingroomid:{3}", startTime, endTime, size, listOfAvailableMeetings[0]);
+                    Console.WriteLine("Resource efficiency so far: {0}", meetingSchedulingMngr.GetResourceEfficiency());
+                }
+                else
+                {
+                    Console.WriteLine("meeting NOT booked for time: {0}-{1} of size {2} and meetingroomid:{3}", startTime, endTime, size, listOfAvailableMeetings[0]);
+                }
+            }
+            else
+            {
+                Console.WriteLine("meeting rooms for time: {0}-{1} of size {2} are not available", startTime, endTime, size);
+            }
         }
     }
 }

@@ -86,7 +86,9 @@ namespace MeetingRoomScheduling
                 // to do: this is generally in small number this should be ok, and is already in sorted order
                 var availableSizesList = availableSizes.ToList();
                 int count = 0;
-
+                 
+                // 5
+                // 1 , 2, 4, 8, 16, 32
                 while (availableSizesList[count] < newMeetingRequest.MeetingSizeRequested)
                 {
                     ++count;
@@ -100,7 +102,7 @@ namespace MeetingRoomScheduling
                     var tasks = meetingRoomIds.Select(p => PrivateCheckMeetingRoomAvailability(newMeetingRequest, p));
 
                     await Task.WhenAll(tasks).ConfigureAwait(false);
-
+                    
                     availableMeetingRooms = tasks.Select(p => p.Result).Where(p => p != null).ToList<string>();
 
                     if (availableMeetingRooms.Any())
