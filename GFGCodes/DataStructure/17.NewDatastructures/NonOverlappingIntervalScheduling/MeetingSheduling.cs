@@ -61,8 +61,8 @@ namespace GFGCodes
 
         public static void GenerateSeedMeetings()
         {
-            var currTime = DateTime.UtcNow;
-            DateTime startTime = new DateTime(currTime.Year, currTime.Month, currTime.Day, currTime.Hour + 1, 0, 0, DateTimeKind.Utc);
+            var currTime = DateTime.UtcNow.AddHours(1);
+            DateTime startTime = new DateTime(currTime.Year, currTime.Month, currTime.Day, currTime.Hour, 0, 0, DateTimeKind.Utc);
             DateTime endTime = startTime.AddMinutes(85);
 
             // reference time 12:00
@@ -104,8 +104,8 @@ namespace GFGCodes
             // since all meetings are booked , if we try for any meeting room it should fail
 
             Console.WriteLine("------------testcase1------------");
-            var currTime = DateTime.UtcNow;
-            DateTime startTime = new DateTime(currTime.Year, currTime.Month, currTime.Day, currTime.Hour + 1, 0, 0, DateTimeKind.Utc);
+            var currTime = DateTime.UtcNow.AddHours(1);
+            DateTime startTime = new DateTime(currTime.Year, currTime.Month, currTime.Day, currTime.Hour, 0, 0, DateTimeKind.Utc);
             DateTime endTime = startTime.AddMinutes(85);
 
             

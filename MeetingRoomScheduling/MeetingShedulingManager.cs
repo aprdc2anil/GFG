@@ -46,9 +46,9 @@ namespace MeetingRoomScheduling
         {
             float resourceEfficiency = 0;
 
-            rwLock.EnterReadLock();
             try
             {
+                rwLock.EnterReadLock();
                 if (bookedCapacity.Equals(0) || providedCapacity.Equals(0))
                 {
                     resourceEfficiency = -1;
