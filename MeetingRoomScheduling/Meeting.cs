@@ -16,7 +16,7 @@
         public Meeting(int meetingSizeRequested, string day, Interval meetingInterval, string meetingRequestorId = null)
         {
             this.MeetingInterval = meetingInterval;
-            this.MeetingSizeRequested = MeetingSizeRequested;
+            this.MeetingSizeRequested = meetingSizeRequested;
 
             // tertiary information for validation purpose
             this.DayOfTheMetting = day;
