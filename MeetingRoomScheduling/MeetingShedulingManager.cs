@@ -27,8 +27,8 @@ namespace MeetingRoomScheduling
 
         public static MeetingShedulingManager Instance { get { return lazy.Value; } }
 
-        private static double providedCapacity;
-        private static double bookedCapacity;
+        private static float providedCapacity;
+        private static float bookedCapacity;
         
         private static readonly object lockObject = new object();
         private static readonly ReaderWriterLockSlim rwLock = new ReaderWriterLockSlim();
@@ -44,14 +44,14 @@ namespace MeetingRoomScheduling
         /// <returns></returns>
         public double GetResourceEfficiency()
         {
-            double resourceEfficiency = 1.0;
+            float resourceEfficiency = 0;
 
             rwLock.EnterReadLock();
             try
             {
-                if (bookedCapacity <= 0.0 || providedCapacity <= 0.0)
+                if (bookedCapacity.Equals(0) || providedCapacity.Equals(0))
                 {
-                    resourceEfficiency = -1.0;
+                    resourceEfficiency = -1;
                 }
 
                 resourceEfficiency = providedCapacity / bookedCapacity;
@@ -59,7 +59,7 @@ namespace MeetingRoomScheduling
             catch (Exception ex)
             {
                 Console.WriteLine("some error occured", ex);
-                resourceEfficiency = -1.0;
+                resourceEfficiency = -1;
             }
             finally
             {
@@ -148,7 +148,7 @@ namespace MeetingRoomScheduling
 
             if (flag)
             {
-                UpdateResourceEfficiencyTrackers(requestedSize, requestorId);
+                UpdateResourceEfficiencyTrackers(requestedSize, meetingRoomId);
             }
 
             return flag;
@@ -175,14 +175,14 @@ namespace MeetingRoomScheduling
         /// 
         /// </summary>
         /// <param name="requestedSize"></param>
-        /// <param name="requestorId"></param>
-        private void UpdateResourceEfficiencyTrackers(int requestedSize, string requestorId)
+        /// <param name="meetingRoomId"></param>
+        private void UpdateResourceEfficiencyTrackers(int requestedSize, string meetingRoomId)
         {
             try
             {
                 rwLock.EnterWriteLock();
                 providedCapacity += requestedSize;
-                bookedCapacity += meetingRoomCapacity[requestorId];
+                bookedCapacity += meetingRoomCapacity[meetingRoomId];
             }
             catch (Exception ex)
             {
