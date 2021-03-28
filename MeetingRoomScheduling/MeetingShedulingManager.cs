@@ -188,6 +188,7 @@ namespace MeetingRoomScheduling
             }
             catch (Exception ex)
             {
+                 Console.WriteLine("some error occured", ex);
             }
             finally
             {

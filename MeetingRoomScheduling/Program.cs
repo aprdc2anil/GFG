@@ -9,7 +9,7 @@ namespace GFGCodes
     {
         static void Main(string[] args)
         {
-            ContinuousSubArraySumEqualsS.EntryPoint();
+           
         }
     }
 }

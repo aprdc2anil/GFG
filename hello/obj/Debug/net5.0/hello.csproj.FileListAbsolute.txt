@@ -1,0 +1,15 @@
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/bin/Debug/net5.0/hello.deps.json
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/bin/Debug/net5.0/hello.runtimeconfig.json
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/bin/Debug/net5.0/hello.runtimeconfig.dev.json
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/bin/Debug/net5.0/hello.dll
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/bin/Debug/net5.0/ref/hello.dll
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/bin/Debug/net5.0/hello.pdb
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/hello.csprojAssemblyReference.cache
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/hello.GeneratedMSBuildEditorConfig.editorconfig
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/hello.AssemblyInfoInputs.cache
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/hello.AssemblyInfo.cs
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/hello.csproj.CoreCompileInputs.cache
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/hello.dll
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/ref/hello.dll
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/hello.pdb
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/hello/obj/Debug/net5.0/hello.genruntimeconfig.cache

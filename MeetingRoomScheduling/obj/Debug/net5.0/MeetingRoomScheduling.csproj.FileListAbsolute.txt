@@ -1,0 +1,15 @@
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/MeetingRoomScheduling.csprojAssemblyReference.cache
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/MeetingRoomScheduling.GeneratedMSBuildEditorConfig.editorconfig
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/MeetingRoomScheduling.AssemblyInfoInputs.cache
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/MeetingRoomScheduling.AssemblyInfo.cs
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/MeetingRoomScheduling.csproj.CoreCompileInputs.cache
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/bin/Debug/net5.0/MeetingRoomScheduling.deps.json
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/bin/Debug/net5.0/MeetingRoomScheduling.runtimeconfig.json
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/bin/Debug/net5.0/MeetingRoomScheduling.runtimeconfig.dev.json
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/bin/Debug/net5.0/MeetingRoomScheduling.dll
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/bin/Debug/net5.0/ref/MeetingRoomScheduling.dll
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/bin/Debug/net5.0/MeetingRoomScheduling.pdb
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/MeetingRoomScheduling.dll
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/ref/MeetingRoomScheduling.dll
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/MeetingRoomScheduling.pdb
+/Users/anilkumar.ramisetty/Documents/GithubPersonal/GFG/GFG/MeetingRoomScheduling/obj/Debug/net5.0/MeetingRoomScheduling.genruntimeconfig.cache
