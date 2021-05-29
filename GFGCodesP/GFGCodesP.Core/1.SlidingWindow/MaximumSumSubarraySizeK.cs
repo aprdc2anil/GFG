@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace GFGCodesP.Core.SlidingWindow
+namespace GFGCodesP.Core
 {
     public class MaximumSumSubarraySizeK
     {

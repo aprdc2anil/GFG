@@ -36,7 +36,7 @@ namespace GFGCodesP.Core
                 if (inorderStack.Count > 0)
                 {
                     root = inorderStack.Pop();
-                    Console.Write("{0}", root.Data);
+                    Console.Write("{0} ", root.Data);
                     root = root.Right;
                 }
                 else
